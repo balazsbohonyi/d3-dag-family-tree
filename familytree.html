@@ -20,25 +20,34 @@
 <meta charset="UTF-8">
 <style>
     body {
+        background: white;
         width: 100%;
         height: 100%;
         overflow: hidden;
     }
 
     .node circle {
-        fill: #fff;
+        fill: steelblue;
         stroke: steelblue;
         stroke-width: 3px;
     }
 
     .node text {
-        font: 12px sans-serif;
+        font: 14px sans-serif;
+        font-weight: bold;
+
+    }
+
+    .node.node--union circle {
+        fill: black !important;
+        stroke: black;
     }
 
     .link {
         fill: none;
-        stroke: #ccc;
+        stroke: black;
         stroke-width: 2px;
+        stroke-opacity: 0.15;
     }
 
     .d3-tip {
@@ -55,7 +64,36 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.9.1/d3-tip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-dag@0.3.4/dist/d3-dag.min.js"></script>
     <script src="data.js"></script>
+
     <script>
+
+        // link / path types
+        var PathTypes = {
+            'DIRECT': 'direct',         // straight lines (node to node)
+            'DIAGONAL': 'diagonal'      // curved diagonal lines
+        }
+
+        // the graph's layout type
+        var LayoutTypes = {
+            'HORIZONTAL': 'horizontal',
+            'VERTICAL': 'vertical'
+        }
+
+
+        /************************************************************/
+        /* CONFIGURATION                                            */
+        /************************************************************/
+
+        // change this true for a vertical family tree
+        const CONF_LAYOUT_TYPE = LayoutTypes.VERTICAL;
+
+        // path type
+        const CONF_PATH_TYPE = PathTypes.DIRECT;
+
+        // collapse all nodes
+        // set this to 'true' to see just the starting node
+        const CONF_COLLAPSE_NODES = false;
+
 
         // extend javascript array class by a remove function
         // copied from https://stackoverflow.com/a/3955096/12267732
@@ -82,7 +120,6 @@
         // Set the dimensions and margins of the diagram
         var screen_width = document.body.offsetWidth,
             screen_height = document.documentElement.clientHeight;
-
 
         // initialize panning, zooming
         var zoom = d3.zoom()
@@ -115,6 +152,7 @@
         const svg = d3.select("body").append("svg")
             .attr("width", screen_width)
             .attr("height", screen_height)
+            .attr('style', "background: #efefef")
             .call(zoom)
             .call(tip)
 
@@ -123,9 +161,10 @@
 
         // helper variables
         var i = 0,
-            duration = 750,
-            x_sep = 120,
-            y_sep = 50;
+            duration = 500,
+            x_sep = 100,
+            y_sep = 100;
+
 
         // declare a dag layout
         var tree = d3.sugiyama()
@@ -173,10 +212,25 @@
         // overwrite dag root nodes
         dag.children = [root];
 
+        // uncollapse all nodes if set in the configuration
+        if (!CONF_COLLAPSE_NODES) {
+            // uncollapse the root
+            uncollapse(root);
+
+            // uncollapse all the other nodes
+            all_nodes.forEach(n => {
+                uncollapse(n);
+
+                neighbors = getNeighbors(n);
+                neighbors.forEach(neighbor => {
+                    uncollapse(neighbor);
+                })
+            });
+        }
+
 
         // draw dag
         update(root);
-
 
         // collapse a node
         function collapse(d) {
@@ -449,6 +503,9 @@
             // Enter any new nodes at the parent's previous position.
             var nodeEnter = node.enter().append('g')
                 .attr('class', 'node')
+                .classed("node--union", function (d) {
+                    return d.data.isUnion;
+                })
                 .attr("transform", function (d) {
                     return "translate(" + source.y0 + "," + source.x0 + ")";
                 })
@@ -467,23 +524,30 @@
 
             // Add names as node labels
             nodeEnter.append('text')
-                .attr("dy", "-2")
+                // .attr("dy", "-2")
+                .attr("dy", "5")
                 .attr("x", 13)
                 .attr("text-anchor", "start")
-                .text(d => d.data.name);
-            // add birth date and death date as labels
-            nodeEnter.append('text')
-                .attr("dy", "10")
-                .attr("x", 13)
-                .attr("text-anchor", "start")
-                .text(
-                    function (d) {
-                        if (d.data.isUnion) return;
-                        return (d.data.birthyear || "?") +
-                            " - " +
-                            (d.data.deathyear || "?")
-                    }
-                );
+                .text(d => d.data.name)
+                .attr('transform', function () {
+                    //  rotate the text CCW because the whole SVG node will be rotated CW to achieve a vertical layout
+                    // TODO: we could add a <div> container and add all the information into that container, and then rotate it as here
+                    return (CONF_LAYOUT_TYPE == LayoutTypes.VERTICAL) ? `rotate(-90, 0, 0)` : `rotate(0, 0, 0)`;
+                });
+
+            // // add birth date and death date as labels
+            // nodeEnter.append('text')
+            //     .attr("dy", "10")
+            //     .attr("x", 13)
+            //     .attr("text-anchor", "start")
+            //     .text(
+            //         function (d) {
+            //             if (d.data.isUnion) return;
+            //             return (d.data.birthyear || "?") +
+            //                 " - " +
+            //                 (d.data.deathyear || "?")
+            //         }
+            //     );
 
             // UPDATE
             var nodeUpdate = nodeEnter.merge(node);
@@ -497,11 +561,14 @@
 
             // Update the node attributes and style
             nodeUpdate.select('circle.node')
-                .attr('r', d => 10 * !d.data.isUnion + 0 * d.data.isUnion)
+                // .attr('r', d => 10 * !d.data.isUnion + 0 * d.data.isUnion)
+                .attr('r', d => 10 * !d.data.isUnion + 4 * d.data.isUnion)      // showing the "union" nodes
+                .style("cursor", function (d) {
+                    return d.data.isUnion ? "default" : "pointer";
+                })
                 .style("fill", function (d) {
                     return is_extendable(d) ? "lightsteelblue" : "#fff";
-                })
-                .attr('cursor', 'pointer');
+                });
 
 
             // Remove any exiting nodes
@@ -532,7 +599,7 @@
                 .attr("class", "link")
                 .attr('d', function (d) {
                     var o = { x: source.x0, y: source.y0 }
-                    return diagonal(o, o)
+                    return create_link(o, o)
                 });
 
             // UPDATE
@@ -541,14 +608,14 @@
             // Transition back to the parent element position
             linkUpdate.transition()
                 .duration(duration)
-                .attr('d', d => diagonal(d.source, d.target));
+                .attr('d', d => create_link(d.source, d.target));
 
             // Remove any exiting links
             var linkExit = link.exit().transition()
                 .duration(duration)
                 .attr('d', function (d) {
                     var o = { x: source.x, y: source.y }
-                    return diagonal(o, o)
+                    return create_link(o, o)
                 })
                 .remove();
 
@@ -561,37 +628,69 @@
                     d3.zoomTransform(g.node()).translate(-(source.y - source.y0), -(source.x - source.x0)),
                 );
 
+            // rotate the whole svg to make it vertical
+            if (CONF_LAYOUT_TYPE == LayoutTypes.VERTICAL) {
+                svg.attr('transform', function () {
+                    // var me = svg.node()
+                    // var x1 = me.getBBox().width / 2;//the center x about which you want to rotate
+                    // var y1 = me.getBBox().height / 2;//the center y about which you want to rotate
+                    // return `rotate(90, ${x1}, ${y1})`;
+                    return `rotate(90, 0, 0)`;
+                });
+            }
+
             // Store the old positions for transition.
             nodes.forEach(function (d) {
                 d.x0 = d.x;
                 d.y0 = d.y;
             });
 
+            // creates the path / link between 2 nodes
+            function create_link(s, d) {
+                switch (CONF_PATH_TYPE) {
+                    case PathTypes.DIRECT:
+                        return link_direct(s, d);
+                        break;
+                    case PathTypes.DIAGONAL:
+                        return link_curved_diagonal(s, d);
+                        break;
+                }
 
-            // Creates a curved (diagonal) path from parent to the child nodes
-            function diagonal(s, d) {
+            }
 
-                path = `M ${s.y} ${s.x}
-            C ${(s.y + d.y) / 2} ${s.x},
-              ${(s.y + d.y) / 2} ${d.x},
-              ${d.y} ${d.x}`
+            // Created a direct path from parent to the child nodes
+            function link_direct(s, d) {
+                path = `M ${s.y} ${s.x} L ${d.y} ${d.x}`
 
                 return path
             }
 
-            // Toggle unions, children, partners on click.
-            function click(d) {
 
-                // do nothing if node is union
-                if (d.data.isUnion) return;
+            // Creates a curved (diagonal) path from parent to the child nodes
+            function link_curved_diagonal(s, d) {
+                path = `M ${s.y} ${s.x}
+                C ${(s.y + d.y) / 2} ${s.x},
+                  ${(s.y + d.y) / 2} ${d.x},
+                  ${d.y} ${d.x}`
 
-                // uncollapse if there are uncollapsed unions / children / partners
-                if (is_extendable(d)) uncollapse(d)
-                // collapse if fully uncollapsed
-                else collapse(d)
-
-                update(d);
+                return path
             }
+
+        }
+
+        // Toggle unions, children, partners on click.
+        function click(d) {
+
+            // do nothing if node is union
+            if (d.data.isUnion) return;
+
+            // uncollapse if there are uncollapsed unions / children / partners
+            if (is_extendable(d)) uncollapse(d)
+
+            // collapse if fully uncollapsed
+            else collapse(d)
+
+            update(d);
         }
 
     </script>
