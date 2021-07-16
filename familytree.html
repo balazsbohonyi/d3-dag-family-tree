@@ -84,9 +84,6 @@
         /* CONFIGURATION                                            */
         /************************************************************/
 
-        // change this true for a vertical family tree
-        const CONF_LAYOUT_TYPE = LayoutTypes.VERTICAL;
-
         // path type
         const CONF_PATH_TYPE = PathTypes.DIRECT;
 
@@ -507,7 +504,7 @@
                     return d.data.isUnion;
                 })
                 .attr("transform", function (d) {
-                    return "translate(" + source.y0 + "," + source.x0 + ")";
+                    return "translate(" + source.x0 + "," + source.y0 + ")";
                 })
                 .on('click', click)
                 .on('mouseover', tip.show)
@@ -531,8 +528,7 @@
                 .text(d => d.data.name)
                 .attr('transform', function () {
                     //  rotate the text CCW because the whole SVG node will be rotated CW to achieve a vertical layout
-                    // TODO: we could add a <div> container and add all the information into that container, and then rotate it as here
-                    return (CONF_LAYOUT_TYPE == LayoutTypes.VERTICAL) ? `rotate(-90, 0, 0)` : `rotate(0, 0, 0)`;
+                    return `rotate(0, 0, 0)`;
                 });
 
             // // add birth date and death date as labels
@@ -556,7 +552,7 @@
             nodeUpdate.transition()
                 .duration(duration)
                 .attr("transform", function (d) {
-                    return "translate(" + d.y + "," + d.x + ")";
+                    return "translate(" + d.x + "," + d.y + ")";
                 });
 
             // Update the node attributes and style
@@ -575,7 +571,7 @@
             var nodeExit = node.exit().transition()
                 .duration(duration)
                 .attr("transform", function (d) {
-                    return "translate(" + source.y + "," + source.x + ")";
+                    return "translate(" + source.x + "," + source.y + ")";
                 })
                 .attr('visible', false)
                 .remove();
@@ -625,19 +621,8 @@
                 .duration(duration)
                 .call(
                     zoom.transform,
-                    d3.zoomTransform(g.node()).translate(-(source.y - source.y0), -(source.x - source.x0)),
+                    d3.zoomTransform(g.node()).translate(-(source.x - source.x0), -(source.y - source.y0)),
                 );
-
-            // rotate the whole svg to make it vertical
-            if (CONF_LAYOUT_TYPE == LayoutTypes.VERTICAL) {
-                svg.attr('transform', function () {
-                    // var me = svg.node()
-                    // var x1 = me.getBBox().width / 2;//the center x about which you want to rotate
-                    // var y1 = me.getBBox().height / 2;//the center y about which you want to rotate
-                    // return `rotate(90, ${x1}, ${y1})`;
-                    return `rotate(90, 0, 0)`;
-                });
-            }
 
             // Store the old positions for transition.
             nodes.forEach(function (d) {
@@ -660,7 +645,7 @@
 
             // Created a direct path from parent to the child nodes
             function link_direct(s, d) {
-                path = `M ${s.y} ${s.x} L ${d.y} ${d.x}`
+                path = `M ${s.x} ${s.y} L ${d.x} ${d.y}`
 
                 return path
             }
@@ -668,10 +653,10 @@
 
             // Creates a curved (diagonal) path from parent to the child nodes
             function link_curved_diagonal(s, d) {
-                path = `M ${s.y} ${s.x}
-                C ${(s.y + d.y) / 2} ${s.x},
-                  ${(s.y + d.y) / 2} ${d.x},
-                  ${d.y} ${d.x}`
+                path = `M ${s.x} ${s.y}
+                C ${(s.x + d.x) / 2} ${s.y},
+                  ${(s.x + d.x) / 2} ${d.y},
+                  ${d.x} ${d.y}`
 
                 return path
             }
