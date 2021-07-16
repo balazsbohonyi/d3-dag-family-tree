@@ -159,13 +159,13 @@
         // helper variables
         var i = 0,
             duration = 500,
-            x_sep = 100,
+            x_sep = 200,
             y_sep = 100;
 
 
         // declare a dag layout
         var tree = d3.sugiyama()
-            .nodeSize([y_sep, x_sep])
+            .nodeSize([x_sep, y_sep])
             .layering(d3.layeringSimplex())
             .decross(d3.decrossOpt)
             .coord(d3.coordVert())
@@ -552,7 +552,9 @@
             nodeUpdate.transition()
                 .duration(duration)
                 .attr("transform", function (d) {
-                    return "translate(" + d.x + "," + d.y + ")";
+                    var y_pos = d.y;
+
+                    return "translate(" + d.x + "," + y_pos + ")";
                 });
 
             // Update the node attributes and style
