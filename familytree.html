@@ -91,6 +91,9 @@
         // set this to 'true' to see just the starting node
         const CONF_COLLAPSE_NODES = false;
 
+        // horizontal lines between partners
+        const CONF_PARTNER_HORIZONTAL_PATHS = false;
+
 
         // extend javascript array class by a remove function
         // copied from https://stackoverflow.com/a/3955096/12267732
@@ -552,9 +555,7 @@
             nodeUpdate.transition()
                 .duration(duration)
                 .attr("transform", function (d) {
-                    var y_pos = d.y;
-
-                    return "translate(" + d.x + "," + y_pos + ")";
+                    return "translate(" + d.x + "," + getNodeVerticalPosition(d) + ")";
                 });
 
             // Update the node attributes and style
@@ -647,7 +648,7 @@
 
             // Created a direct path from parent to the child nodes
             function link_direct(s, d) {
-                path = `M ${s.x} ${s.y} L ${d.x} ${d.y}`
+                path = `M ${s.x} ${getNodeVerticalPosition(s)} L ${d.x} ${getNodeVerticalPosition(d)}`
 
                 return path
             }
@@ -663,6 +664,26 @@
                 return path
             }
 
+        }
+
+        // for a "union" node it returns the same vertical position as the parent nodes have,
+        // otherwise returns the nodes' vertical position
+        function getNodeVerticalPosition(node) {
+            if (!CONF_PARTNER_HORIZONTAL_PATHS) return node.y;
+
+            if (node.data !== undefined && node.data.isUnion) {
+                // get the parents
+                var parents = getParents(node);
+
+                // if there are 2 parents, we move the union node
+                // at the same Y position as the parent nodes
+                // to get a horizontal line between the 2 parents
+                if (parents.length == 2) {
+                    return parents[0].y
+                }
+            }
+
+            return node.y;
         }
 
         // Toggle unions, children, partners on click.
