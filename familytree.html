@@ -32,22 +32,25 @@
         stroke-width: 3px;
     }
 
+    .node.node--female circle {
+        fill: rosybrown !important;
+        stroke: rosybrown !important;
+    }
+
     .node text {
         font: 14px sans-serif;
         font-weight: bold;
-
     }
 
     .node.node--union circle {
-        fill: black !important;
-        stroke: black;
+        fill: #ccc !important;
+        stroke: #ccc;
     }
 
     .link {
         fill: none;
-        stroke: black;
+        stroke: #ccc;
         stroke-width: 2px;
-        stroke-opacity: 0.15;
     }
 
     .d3-tip {
@@ -92,7 +95,7 @@
         const CONF_COLLAPSE_NODES = false;
 
         // horizontal lines between partners
-        const CONF_PARTNER_HORIZONTAL_PATHS = false;
+        const CONF_PARTNER_HORIZONTAL_PATHS = true;
 
 
         // extend javascript array class by a remove function
@@ -125,7 +128,6 @@
         var zoom = d3.zoom()
             .on("zoom", _ => g.attr("transform", d3.event.transform));
 
-
         // initialize tooltips
         var tip = d3.tip()
             .attr('class', 'd3-tip')
@@ -157,12 +159,15 @@
             .call(tip)
 
         // append group element
-        const g = svg.append("g");
+        const g = svg.append("g").attr("id", "container");
+
+        container = svg.select('#container');
+
 
         // helper variables
         var i = 0,
-            duration = 500,
-            x_sep = 200,
+            duration = 0,
+            x_sep = 300,
             y_sep = 100;
 
 
@@ -206,8 +211,14 @@
         root = all_nodes.find(n => n.id == data.start);
         root.visible = true;
         root.neighbors = getNeighbors(root);
-        root.x0 = screen_height / 2;
-        root.y0 = screen_width / 2;
+
+        // TODO:
+        // root.x0 = screen_width / 2;
+        // root.y0 = screen_height / 2;
+
+        // positioning the root node
+        root.x0 = screen_width - 200;
+        root.y0 = 200;
 
         // overwrite dag root nodes
         dag.children = [root];
@@ -397,7 +408,20 @@
                     u => parents = parents.concat(getParents(u))
                 );
             }
-            return parents.filter(p => p != undefined)
+
+            parents = parents.filter(p => p != undefined);
+
+            // parents = parents.filter(p => p != undefined).sort(function (a, b) {
+            //     if (a.data.gender == "male" && b.data.gender == "female") {
+            //         return -1
+            //     }
+
+            //     if (a.data.gender == "female" && b.data.gender == "male") {
+            //         return 1
+            //     }
+            // })
+
+            return parents
         }
 
         function getOtherPartner(node, union_data) {
@@ -424,7 +448,20 @@
                     }
                 )
             }
-            return partners.filter(p => p != undefined)
+
+            partners = partners.filter(p => p != undefined)
+
+            partners = partners.sort(function (a, b) {
+                if (a.data.gender == "male" && b.data.gender == "female") {
+                    return -1
+                }
+
+                if (a.data.gender == "female" && b.data.gender == "male") {
+                    return 1
+                }
+            })
+
+            return partners
         }
 
         function getOwnUnions(node) {
@@ -451,15 +488,16 @@
             children = children
                 .filter(c => c != undefined)
                 .sort((a, b) => Math.sign((getBirthYear(a) || 0) - (getBirthYear(b) || 0)));
+
             return children
         }
 
         function getBirthYear(node) {
-            return new Date(node.data.birthyear || NaN).getFullYear()
+            return new Date(node.data.birthyear || NaN, 1, 1).getFullYear()
         }
 
         function getDeathYear(node) {
-            return new Date(node.data.deathyear || NaN).getFullYear()
+            return new Date(node.data.deathyear || NaN, 1, 1).getFullYear()
         }
 
         function find_path(n) {
@@ -506,6 +544,9 @@
                 .classed("node--union", function (d) {
                     return d.data.isUnion;
                 })
+                .classed("node--female", function (d) {
+                    return d.data.gender == "female";
+                })
                 .attr("transform", function (d) {
                     return "translate(" + source.x0 + "," + source.y0 + ")";
                 })
@@ -519,7 +560,7 @@
                 .attr('class', 'node')
                 .attr('r', 1e-6)
                 .style("fill", function (d) {
-                    return is_extendable(d) ? "lightsteelblue" : "#fff";
+                    return is_extendable(d) ? "lightsteelblue" : "steelblue";
                 });
 
             // Add names as node labels
@@ -534,19 +575,19 @@
                     return `rotate(0, 0, 0)`;
                 });
 
-            // // add birth date and death date as labels
-            // nodeEnter.append('text')
-            //     .attr("dy", "10")
-            //     .attr("x", 13)
-            //     .attr("text-anchor", "start")
-            //     .text(
-            //         function (d) {
-            //             if (d.data.isUnion) return;
-            //             return (d.data.birthyear || "?") +
-            //                 " - " +
-            //                 (d.data.deathyear || "?")
-            //         }
-            //     );
+            // add birth date and death date as labels
+            nodeEnter.append('text')
+                .attr("dy", "20")
+                .attr("x", 13)
+                .attr("text-anchor", "start")
+                .text(
+                    function (d) {
+                        if (d.data.isUnion) return;
+                        return (d.data.birthyear || "?") +
+                            " - " +
+                            (d.data.deathyear || "?")
+                    }
+                );
 
             // UPDATE
             var nodeUpdate = nodeEnter.merge(node);
@@ -561,12 +602,12 @@
             // Update the node attributes and style
             nodeUpdate.select('circle.node')
                 // .attr('r', d => 10 * !d.data.isUnion + 0 * d.data.isUnion)
-                .attr('r', d => 10 * !d.data.isUnion + 4 * d.data.isUnion)      // showing the "union" nodes
+                .attr('r', d => 10 * !d.data.isUnion + 2 * d.data.isUnion)      // showing the "union" nodes
                 .style("cursor", function (d) {
                     return d.data.isUnion ? "default" : "pointer";
                 })
                 .style("fill", function (d) {
-                    return is_extendable(d) ? "lightsteelblue" : "#fff";
+                    return is_extendable(d) ? "lightsteelblue" : "steelblue";
                 });
 
 
@@ -649,6 +690,24 @@
             // Created a direct path from parent to the child nodes
             function link_direct(s, d) {
                 path = `M ${s.x} ${getNodeVerticalPosition(s)} L ${d.x} ${getNodeVerticalPosition(d)}`
+
+                if (s.data !== undefined && s.data.isUnion) {
+                    child_node = getChildren(s).filter(n => n.id == d.id)
+
+                    if (child_node.length > 0) {
+                        if (getChildren(s).length > 1) {
+                            y_new = getNodeVerticalPosition(s) + parseInt((getNodeVerticalPosition(d) - getNodeVerticalPosition(s)) / 2)
+
+                            if (s.x != d.x) {
+                                path = `M ${s.x} ${getNodeVerticalPosition(s)}
+                                        L ${s.x} ${y_new}
+                                        L ${d.x} ${y_new}
+                                        L ${d.x} ${d.y}
+                                        `
+                            }
+                        }
+                    }
+                }
 
                 return path
             }
