@@ -159,10 +159,7 @@
             .call(tip)
 
         // append group element
-        const g = svg.append("g").attr("id", "container");
-
-        container = svg.select('#container');
-
+        const g = svg.append("g");
 
         // helper variables
         var i = 0,
@@ -176,7 +173,7 @@
             .nodeSize([x_sep, y_sep])
             .layering(d3.layeringSimplex())
             .decross(d3.decrossOpt)
-            .coord(d3.coordVert())
+            .coord(d3.coordVert())        // coordVert(), coordGreedy(), coordCenter(), coordMinCurve()
             .separation(
                 (a, b) => { return 1 }
             );
@@ -196,6 +193,7 @@
 
         // prepare node data
         var all_nodes = dag.descendants()
+
         all_nodes.forEach(n => {
             n.data = data.persons[n.id] ? data.persons[n.id] : data.unions[n.id];
             n._children = n.children; // all nodes collapsed by default
@@ -212,13 +210,13 @@
         root.visible = true;
         root.neighbors = getNeighbors(root);
 
-        // TODO:
+        // // TODO:
         // root.x0 = screen_width / 2;
         // root.y0 = screen_height / 2;
 
         // positioning the root node
         root.x0 = screen_width - 200;
-        root.y0 = 200;
+        root.y0 = screen_height / 2;
 
         // overwrite dag root nodes
         dag.children = [root];
@@ -500,6 +498,7 @@
             return new Date(node.data.deathyear || NaN, 1, 1).getFullYear()
         }
 
+        // TODO: not used
         function find_path(n) {
             var parents = getParents(n);
             var found = false;
@@ -530,6 +529,9 @@
             var dag_tree = tree(dag),
                 nodes = dag.descendants(),
                 links = dag.links();
+
+            // reposition partners so that males are on the left and females on the right of a "union" node
+            // forceMalesOnSameSideOfUnionNodes(nodes.filter(n => n.data.isUnion))
 
 
             // ****************** Nodes section ***************************
@@ -743,6 +745,29 @@
             }
 
             return node.y;
+        }
+
+        // Moves the "male" nodes on the same side of the "union" nodes
+        //    unions - all the union nodes
+        function forceMalesOnSameSideOfUnionNodes(unions) {
+            unions.forEach(function (n) {
+                partners = getPartners(n);
+
+                if (partners.length == 2) {
+                    if ((partners[0].data.gender == "male" && (partners[0].x > partners[1].x)) ||
+                        (partners[1].data.gender == "male" && (partners[1].x > partners[0].x))) {
+                        // switch the x position of the 2 partner nodes
+                        x_pos = partners[0].x;
+                        x0_pos = partners[0].x0;
+
+                        partners[0].x = partners[1].x;
+                        partners[0].x0 = partners[1].x0 === undefined ? partners[1].x : partners[1].x0;
+
+                        partners[1].x = x_pos;
+                        partners[1].x0 = x0_pos === undefined ? x_pos : x0_pos;
+                    }
+                }
+            });
         }
 
         // Toggle unions, children, partners on click.

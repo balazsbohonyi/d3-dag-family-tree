@@ -1,5 +1,5 @@
 data = {
-    "start":"id7",
+    "start":"id11",
     "persons": {
         "id1": { "id": "id1", "gender" : "male", "name": "Adam", "birthyear": 1900, "deathyear": 1980, "own_unions": ["u1"], "birthplace":"Alberta", "deathplace":"Austin"},
         "id2": { "id": "id2", "gender" : "female", "name": "Berta", "birthyear": 1901, "deathyear": 1985, "own_unions": ["u1"], "birthplace":"Berlin", "deathplace":"Bern" },

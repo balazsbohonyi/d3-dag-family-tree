@@ -123,7 +123,7 @@
 
         // helper variables
         var i = 0,
-            duration = 750,
+            duration = 0,
             x_sep = 120,
             y_sep = 50;
 
@@ -173,6 +173,18 @@
         // overwrite dag root nodes
         dag.children = [root];
 
+        // uncollapse the root
+        uncollapse(root);
+
+        // uncollapse all the other nodes
+        all_nodes.forEach(n => {
+            uncollapse(n);
+
+            neighbors = getNeighbors(n);
+            neighbors.forEach(neighbor => {
+                uncollapse(neighbor);
+            })
+        });
 
         // draw dag
         update(root);
