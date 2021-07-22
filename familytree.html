@@ -172,10 +172,13 @@
         var tree = d3.sugiyama()
             .nodeSize([x_sep, y_sep])
             .layering(d3.layeringSimplex())
-            .decross(d3.decrossOpt)
+            .decross(d3.decrossOpt())
             .coord(d3.coordVert())        // coordVert(), coordGreedy(), coordCenter(), coordMinCurve()
             .separation(
-                (a, b) => { return 1 }
+                (a, b) => {
+
+                  return 1
+                }
             );
 
         // make dag from edge list
@@ -455,7 +458,7 @@
                 }
 
                 if (a.data.gender == "female" && b.data.gender == "male") {
-                    return 1
+                    return 0
                 }
             })
 
@@ -531,7 +534,7 @@
                 links = dag.links();
 
             // reposition partners so that males are on the left and females on the right of a "union" node
-            // forceMalesOnSameSideOfUnionNodes(nodes.filter(n => n.data.isUnion))
+            forceMalesOnSameSideOfUnionNodes(nodes.filter(n => n.data.isUnion))
 
 
             // ****************** Nodes section ***************************
@@ -753,18 +756,26 @@
             unions.forEach(function (n) {
                 partners = getPartners(n);
 
-                if (partners.length == 2) {
-                    if ((partners[0].data.gender == "male" && (partners[0].x > partners[1].x)) ||
-                        (partners[1].data.gender == "male" && (partners[1].x > partners[0].x))) {
+                if (partners.length === 2) {
+                    const [partnerOne, partnerTwo] = partners
+
+                    // in case one of the union partner have other partner, we don't sort
+                    if (getPartners(partnerOne).length > 1 || getPartners(partnerTwo).length > 1) {
+                      return
+                    }
+
+
+                    if ((partnerOne.data.gender === "male" && (partnerOne.x > partnerTwo.x)) ||
+                        (partnerTwo.data.gender === "male" && (partnerTwo.x > partnerOne.x))) {
                         // switch the x position of the 2 partner nodes
-                        x_pos = partners[0].x;
-                        x0_pos = partners[0].x0;
+                        x_pos = partnerOne.x;
+                        x0_pos = partnerOne.x0;
 
-                        partners[0].x = partners[1].x;
-                        partners[0].x0 = partners[1].x0 === undefined ? partners[1].x : partners[1].x0;
+                        partnerOne.x = partnerTwo.x;
+                        partnerOne.x0 = partnerTwo.x0 === undefined ? partnerTwo.x : partnerTwo.x0;
 
-                        partners[1].x = x_pos;
-                        partners[1].x0 = x0_pos === undefined ? x_pos : x0_pos;
+                        partnerTwo.x = x_pos;
+                        partnerTwo.x0 = x0_pos === undefined ? x_pos : x0_pos;
                     }
                 }
             });
