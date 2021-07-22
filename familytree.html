@@ -88,14 +88,14 @@
         /************************************************************/
 
         // path type
-        const CONF_PATH_TYPE = PathTypes.DIRECT;
+        const CONF_PATH_TYPE = PathTypes.DIAGONAL;
 
         // collapse all nodes
         // set this to 'true' to see just the starting node
         const CONF_COLLAPSE_NODES = false;
 
         // horizontal lines between partners
-        const CONF_PARTNER_HORIZONTAL_PATHS = true;
+        const CONF_PARTNER_HORIZONTAL_PATHS = false;
 
 
         // extend javascript array class by a remove function
@@ -763,7 +763,6 @@
                     if (getPartners(partnerOne).length > 1 || getPartners(partnerTwo).length > 1) {
                       return
                     }
-
 
                     if ((partnerOne.data.gender === "male" && (partnerOne.x > partnerTwo.x)) ||
                         (partnerTwo.data.gender === "male" && (partnerTwo.x > partnerOne.x))) {
