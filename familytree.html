@@ -68,6 +68,9 @@
     <script src="https://cdn.jsdelivr.net/npm/d3-dag@0.3.4/dist/d3-dag.min.js"></script>
     <script src="data.js"></script>
 
+    <button onclick="makeCurvy()">curvy lines</button>
+    <button onclick="makeStraight()">straight lines</button>
+
     <script>
 
         // link / path types
@@ -88,15 +91,14 @@
         /************************************************************/
 
         // path type
-        const CONF_PATH_TYPE = PathTypes.DIAGONAL;
+        let CONF_PATH_TYPE = PathTypes.DIAGONAL;
 
         // collapse all nodes
         // set this to 'true' to see just the starting node
-        const CONF_COLLAPSE_NODES = false;
+        let CONF_COLLAPSE_NODES = false;
 
         // horizontal lines between partners
-        const CONF_PARTNER_HORIZONTAL_PATHS = false;
-
+        let CONF_PARTNER_HORIZONTAL_PATHS = false;
 
         // extend javascript array class by a remove function
         // copied from https://stackoverflow.com/a/3955096/12267732
@@ -793,6 +795,19 @@
             else collapse(d)
 
             update(d);
+        }
+
+
+        function makeStraight() {
+          CONF_PATH_TYPE = PathTypes.DIRECT;
+          CONF_PARTNER_HORIZONTAL_PATHS = true;
+          update(root);
+        }
+
+        function makeCurvy() {
+          CONF_PATH_TYPE = PathTypes.DIAGONAL;
+          CONF_PARTNER_HORIZONTAL_PATHS = false;
+          update(root);
         }
 
     </script>
