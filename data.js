@@ -3,7 +3,7 @@ data = {
     "persons": {
         "id1": { "id": "id1", "gender" : "male", "name": "Adam", "birthyear": 1900, "deathyear": 1980, "own_unions": ["u1"], "birthplace":"Alberta", "deathplace":"Austin"},
         "id2": { "id": "id2", "gender" : "female", "name": "Berta", "birthyear": 1901, "deathyear": 1985, "own_unions": ["u1"], "birthplace":"Berlin", "deathplace":"Bern" },
-        "id3": { "id": "id3", "gender" : "female", "name": "Charlene", "birthyear": 1930, "deathyear": 2010, "own_unions": ["u3", "u4"], "parent_union": "u1", "birthplace":"Château", "deathplace":"Cuxhaven" },
+        "id3": { "id": "id3", "gender" : "female", "name": "Charlene", "birthyear": 1930, "deathyear": 2010, "own_unions": ["u3", "u4", "u6"], "parent_union": "u1", "birthplace":"Château", "deathplace":"Cuxhaven" },
         "id4": { "id": "id4", "gender" : "male", "name": "Dan", "birthyear": 1926, "deathyear": 2009, "own_unions": [], "parent_union": "u1", "birthplace":"den Haag", "deathplace":"Derince" },
         "id5": { "id": "id5", "gender" : "male", "name": "Eric", "birthyear": 1931, "deathyear": 2015, "own_unions": ["u3"], "parent_union": "u2", "birthplace":"Essen", "deathplace":"Edinburgh" },
         "id6": { "id": "id6", "gender" : "male", "name": "Francis", "birthyear": 1902, "deathyear": 1970, "own_unions": ["u2"], "birthplace":"Firenze", "deathplace":"Faizabad" },
@@ -13,6 +13,8 @@ data = {
         "id10": { "id": "id10", "gender" : "female", "name": "Jennifer", "birthyear": 1950, "own_unions": [], "parent_union": "u4" },
         "id11": { "id": "id11", "gender" : "male", "name": "Klaus", "birthyear": 1933, "deathyear": 2013, "own_unions": [], "parent_union": "u1" },
         "id12": { "id": "id12", "gender" : "male", "name": "Lennart", "birthyear": 1999, "own_unions": [], "parent_union": "u5" },
+        // "id13": { "id": "id13", "gender" : "male", "name": "Balazs", "birthyear": 1925, "deathyear": 1963, "own_unions": ["u6"] },
+        // "id14": { "id": "id14", "gender" : "male", "name": "Joe", "birthyear": 1925, "deathyear": 1963, "own_unions": [], "parent_union": "u6" },
     },
     "unions": {
         "u1": { "id": "u1", "partner": ["id1", "id2"], "children": ["id3", "id4", "id11"] },
@@ -20,6 +22,7 @@ data = {
         "u3": { "id": "u3", "partner": ["id3", "id5"], "children": ["id8"] },
         "u4": { "id": "u4", "partner": ["id3", "id9"], "children": ["id10"] },
         "u5": { "id": "u5", "partner": ["id8"], "children": ["id12"] },
+        // "u6": { "id": "u6", "partner": ["id3", "id13"], "children": ["id14"] },
     },
     "links": [
         ["id1", "u1"],
@@ -38,5 +41,8 @@ data = {
         ["u1", "id11"],
         ["id8", "u5"],
         ["u5", "id12"],
+        // ["id3", "u6"],
+        // ["id13", "u6"],
+        // ["u6", "id14"],
     ]
 }
