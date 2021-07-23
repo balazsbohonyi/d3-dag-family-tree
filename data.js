@@ -152,7 +152,7 @@ function buildData(maxLevels = 2) {
     }
 }
 
-data = buildData(3)
+data = buildData(4)
 
 console.log(data)
 alert(Object.keys(data.persons).length)
